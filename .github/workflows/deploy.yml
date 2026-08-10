@@ -1,0 +1,68 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/task-management-backend:latest
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/task-management-frontend:latest
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            cd /home/${{ secrets.SERVER_USERNAME }}/task-management || mkdir -p /home/${{ secrets.SERVER_USERNAME }}/task-management
+            cd /home/${{ secrets.SERVER_USERNAME }}/task-management
+            
+            # Create a simple script on the server to handle pulling and restarting
+            cat << 'EOF' > deploy.sh
+            #!/bin/bash
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            docker-compose pull
+            docker-compose up -d
+            
+            # Wait for backend to be ready, then run migrations and seed
+            echo "Waiting for backend service to be ready..."
+            sleep 15
+            
+            echo "Running Prisma Migrations and Seed..."
+            docker-compose exec -T backend npx prisma migrate deploy
+            docker-compose exec -T backend npm run seed || echo "Seed command failed or not configured"
+            EOF
+            chmod +x deploy.sh
+            
+            ./deploy.sh

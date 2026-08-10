@@ -1,0 +1,78 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ProjectsService = void 0;
+const common_1 = require("@nestjs/common");
+const prisma_service_1 = require("../prisma/prisma.service");
+let ProjectsService = class ProjectsService {
+    prisma;
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    create(createProjectDto, userId) {
+        return this.prisma.project.create({
+            data: {
+                ...createProjectDto,
+                userId,
+            },
+        });
+    }
+    findAll(userId) {
+        return this.prisma.project.findMany({
+            where: { userId },
+            include: { _count: { select: { tasks: true } } },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    findOne(id, userId) {
+        return this.prisma.project.findFirst({
+            where: { id, userId },
+            include: { tasks: true },
+        });
+    }
+    async getStats(userId) {
+        const projects = await this.prisma.project.findMany({
+            where: { userId },
+            select: { id: true },
+        });
+        const projectIds = projects.map((p) => p.id);
+        const [total, pending, inProgress, completed] = await Promise.all([
+            this.prisma.task.count({ where: { projectId: { in: projectIds } } }),
+            this.prisma.task.count({ where: { projectId: { in: projectIds }, status: 'PENDING' } }),
+            this.prisma.task.count({ where: { projectId: { in: projectIds }, status: 'IN_PROGRESS' } }),
+            this.prisma.task.count({ where: { projectId: { in: projectIds }, status: 'COMPLETED' } }),
+        ]);
+        return {
+            totalProjects: projects.length,
+            totalTasks: total,
+            pending,
+            inProgress,
+            completed,
+        };
+    }
+    update(id, updateProjectDto, userId) {
+        return this.prisma.project.updateMany({
+            where: { id, userId },
+            data: updateProjectDto,
+        });
+    }
+    remove(id, userId) {
+        return this.prisma.project.deleteMany({
+            where: { id, userId },
+        });
+    }
+};
+exports.ProjectsService = ProjectsService;
+exports.ProjectsService = ProjectsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+], ProjectsService);
+//# sourceMappingURL=projects.service.js.map
