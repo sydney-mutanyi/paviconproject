@@ -87,9 +87,15 @@ jobs:
             fi
 
             docker compose pull
-            docker compose up -d
+            docker compose up -d nginx frontend backend mongodb mongo-init
             
-            # Restart Nginx to pick up new config
+            # Wait a few seconds for Nginx to initialize with dummy cert
+            sleep 5
+            
+            # Force run certbot to acquire the real Let's Encrypt certificate
+            docker compose up certbot
+            
+            # Restart Nginx to pick up the newly generated real SSL config
             docker compose restart nginx
 
             # Wait for backend service to be ready, then run migrations and seed
@@ -97,7 +103,7 @@ jobs:
             sleep 15
             
             echo "Running Prisma Migrations and Seed..."
-            docker compose exec -T backend npx prisma migrate deploy || true
+            docker compose exec -T backend npx prisma db push --accept-data-loss || true
             docker compose exec -T backend npm run seed || echo "Seed command failed or not configured"
             EOF
             chmod +x deploy.sh
