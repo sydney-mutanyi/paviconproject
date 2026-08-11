@@ -1,0 +1,10 @@
+.env
+.env.local
+.env.*.local
+.agents/
+.windsurf/
+.claude/
+.gemini/
+*lock.json
+/certbot/conf/
+/certbot/www/
