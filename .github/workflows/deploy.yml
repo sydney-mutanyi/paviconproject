@@ -73,6 +73,10 @@ jobs:
             export DATABASE_URL="${{ secrets.DATABASE_URL }}"
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
 
+            # Ensure host directory for MongoDB exists with correct permissions
+            mkdir -p ./mongodb_data
+            chmod 777 ./mongodb_data
+
             # Create .env file with secrets for docker compose
             echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" > .env
             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env

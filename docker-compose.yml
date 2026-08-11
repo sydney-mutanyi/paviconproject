@@ -58,7 +58,7 @@ services:
     ports:
       - '27017:27017'
     volumes:
-      - mongo_data:/data/db
+      - ./mongodb_data:/data/db
     restart: unless-stopped
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
@@ -77,5 +77,4 @@ services:
       mongosh --host task_management_mongo:27017 --eval
       "rs.initiate({_id:'rs0',members:[{_id:0,host:'task_management_mongo:27017'}]})"
 
-volumes:
-  mongo_data:
+
