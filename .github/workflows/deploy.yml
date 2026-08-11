@@ -38,6 +38,15 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/task-management-frontend:latest
 
+      - name: Copy Files to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          source: "docker-compose.yml,nginx/"
+          target: "/home/${{ secrets.SERVER_USERNAME }}/task-management"
+
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -50,6 +59,8 @@ jobs:
             
             cat << 'EOF' > deploy.sh
             #!/bin/bash
+            set -e
+
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             export DATABASE_URL=${{ secrets.DATABASE_URL }}
             export JWT_SECRET=${{ secrets.JWT_SECRET }}
