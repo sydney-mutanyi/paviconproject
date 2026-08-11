@@ -51,6 +51,8 @@ jobs:
             cat << 'EOF' > deploy.sh
             #!/bin/bash
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            export DATABASE_URL=${{ secrets.DATABASE_URL }}
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
 
             # Ensure certbot directories exist
             mkdir -p ./certbot/conf/live/test1.pavicontech.com
