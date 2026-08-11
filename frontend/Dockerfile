@@ -1,6 +1,7 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 WORKDIR /app
 
 # Copy package files
