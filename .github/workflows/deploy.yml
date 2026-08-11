@@ -88,6 +88,9 @@ jobs:
 
             docker compose pull
             docker compose up -d
+            
+            # Restart Nginx to pick up new config
+            docker compose restart nginx
 
             # Wait for backend service to be ready, then run migrations and seed
             echo "Waiting for backend service to be ready..."
