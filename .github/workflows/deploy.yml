@@ -86,16 +86,16 @@ jobs:
                 -subj '/CN=test1.pavicontech.com'
             fi
 
-            docker-compose pull
-            docker-compose up -d
+            docker compose pull
+            docker compose up -d
 
             # Wait for backend service to be ready, then run migrations and seed
             echo "Waiting for backend service to be ready..."
             sleep 15
             
             echo "Running Prisma Migrations and Seed..."
-            docker-compose exec -T backend npx prisma migrate deploy || true
-            docker-compose exec -T backend npm run seed || echo "Seed command failed or not configured"
+            docker compose exec -T backend npx prisma migrate deploy || true
+            docker compose exec -T backend npm run seed || echo "Seed command failed or not configured"
             EOF
             chmod +x deploy.sh
             
