@@ -20,7 +20,7 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email admin@pavicontech.com -d test1.pavicontech.com --agree-tos
+    command: certonly --webroot -w /var/www/certbot --email admin@pavicontech.com -d test1.pavicontech.com --agree-tos -n
 
   frontend:
     image: ${DOCKERHUB_USERNAME:-sydneymutanyi}/task-management-frontend:latest

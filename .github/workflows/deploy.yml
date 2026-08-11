@@ -52,7 +52,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
-          source: "docker-compose.yml,nginx/"
+          source: "docker-compose.yml,nginx/,init-letsencrypt.sh"
           target: "/home/${{ secrets.SERVER_USERNAME }}/task-management"
 
       - name: Deploy to Server
@@ -73,29 +73,10 @@ jobs:
             export DATABASE_URL="${{ secrets.DATABASE_URL }}"
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
 
-            # Ensure certbot directories exist
-            mkdir -p ./certbot/conf/live/test1.pavicontech.com
-            mkdir -p ./certbot/www
-
-            # Create initial dummy SSL certificate if none exists so Nginx can start up cleanly
-            if [ ! -f ./certbot/conf/live/test1.pavicontech.com/fullchain.pem ]; then
-              echo "Creating initial self-signed SSL certificate for Nginx startup..."
-              openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
-                -keyout ./certbot/conf/live/test1.pavicontech.com/privkey.pem \
-                -out ./certbot/conf/live/test1.pavicontech.com/fullchain.pem \
-                -subj '/CN=test1.pavicontech.com'
-            fi
-
             docker compose pull
             docker compose up -d nginx frontend backend mongodb mongo-init
             
-            # Wait a few seconds for Nginx to initialize with dummy cert
-            sleep 5
-            
-            # Force run certbot to acquire the real Let's Encrypt certificate
-            docker compose up certbot
-            
-            # Restart Nginx to pick up the newly generated real SSL config
+            # Restart Nginx to ensure it picks up any new configs
             docker compose restart nginx
 
             # Wait for backend service to be ready, then run migrations and seed
