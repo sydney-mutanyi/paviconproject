@@ -73,6 +73,13 @@ jobs:
             export DATABASE_URL="${{ secrets.DATABASE_URL }}"
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
 
+            # Create .env file with secrets for docker compose
+            cat << EOF > .env
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            EOF
+
             docker compose pull
             docker compose up -d nginx frontend backend mongodb mongo-init
             
